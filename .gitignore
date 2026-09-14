@@ -1,0 +1,33 @@
+# Vault secrets and local state
+*.hcl.local
+*.json
+*.pem
+*.key
+
+# Vault data
+data/
+raft/
+vault-data/
+
+# Environment files
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+
+# Logs
+*.log
