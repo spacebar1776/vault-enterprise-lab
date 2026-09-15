@@ -1,0 +1,48 @@
+services:
+
+  vault-1:
+    image: hashicorp/vault:2.1.0
+    container_name: vault-1
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault-1-data:/vault/data
+      - ./lab-02-ha-raft/config/vault-1:/vault/config
+    command: vault server -config=/vault/config/vault.hcl
+    networks:
+      - vault-network
+
+  vault-2:
+    image: hashicorp/vault:2.1.0
+    container_name: vault-2
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-2-data:/vault/data
+      - ./lab-02-ha-raft/config/vault-2:/vault/config
+    command: vault server -config=/vault/config/vault.hcl
+    networks:
+      - vault-network
+
+  vault-3:
+    image: hashicorp/vault:2.1.0
+    container_name: vault-3
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-3-data:/vault/data
+      - ./lab-02-ha-raft/config/vault-3:/vault/config
+    command: vault server -config=/vault/config/vault.hcl
+    networks:
+      - vault-network
+
+volumes:
+  vault-1-data:
+  vault-2-data:
+  vault-3-data:
+
+networks:
+  vault-network:
+    driver: bridge
