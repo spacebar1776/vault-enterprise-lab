@@ -1,0 +1,24 @@
+name: Vault OIDC Discovery
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  inspect-identity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show GitHub identity context
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+          echo "Workflow: $GITHUB_WORKFLOW"
+          echo "Actor: $GITHUB_ACTOR"
+
+      - name: Confirm OIDC permission
+        run: |
+          echo "GitHub OIDC token permission is enabled."
