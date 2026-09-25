@@ -1,4 +1,3 @@
-```yaml
 name: Vault JWT Login
 
 on:
@@ -52,5 +51,4 @@ jobs:
             echo "$RESPONSE" | jq .
             exit 1
           fi
-```
 
