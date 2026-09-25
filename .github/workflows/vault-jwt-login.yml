@@ -31,7 +31,9 @@ jobs:
           # Pass the JWT to the next step without printing it.
           echo "jwt=$JWT" >> "$GITHUB_OUTPUT"
 
+       
       - name: Authenticate to Vault
+        id: vault
         env:
           VAULT_ADDR: "https://begun-casting-epinions-others.trycloudflare.com"
           VAULT_ROLE: "orders-deploy"
@@ -43,12 +45,35 @@ jobs:
             -d "{\"role\":\"$VAULT_ROLE\",\"jwt\":\"$JWT\"}" \
             "$VAULT_ADDR/v1/auth/jwt/login")
 
-          if echo "$RESPONSE" | jq -e '.auth.client_token != null and .auth.client_token != ""' > /dev/null; then
-            echo "Successfully authenticated to Vault."
-            echo "Vault issued a client token."
-          else
+          VAULT_TOKEN=$(echo "$RESPONSE" | jq -r '.auth.client_token')
+
+          if [ -z "$VAULT_TOKEN" ] || [ "$VAULT_TOKEN" = "null" ]; then
             echo "Vault authentication failed."
             echo "$RESPONSE" | jq .
             exit 1
           fi
+
+          echo "Successfully authenticated to Vault."
+
+          # Pass the Vault token to the next step without printing it.
+          echo "vault_token=$VAULT_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Retrieve dynamic database credentials
+        env:
+          VAULT_ADDR: "https://begun-casting-epinions-others.trycloudflare.com"
+          VAULT_TOKEN: ${{ steps.vault.outputs.vault_token }}
+        run: |
+          RESPONSE=$(curl -sS \
+            -H "X-Vault-Token: $VAULT_TOKEN" \
+            "$VAULT_ADDR/v1/database/creds/orders-db")
+
+          if echo "$RESPONSE" | jq -e '.data.username and .data.password' > /dev/null; then
+            echo "Successfully retrieved dynamic database credentials."
+            echo "Vault generated a database username and password."
+          else
+            echo "Failed to retrieve database credentials."
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
 
