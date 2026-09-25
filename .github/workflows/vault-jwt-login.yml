@@ -65,7 +65,7 @@ jobs:
         run: |
           RESPONSE=$(curl -sS \
             -H "X-Vault-Token: $VAULT_TOKEN" \
-            "$VAULT_ADDR/v1/database/creds/orders-db")
+            "$VAULT_ADDR/v1/database/creds/does-not-exist")
 
           if echo "$RESPONSE" | jq -e '.data.username and .data.password' > /dev/null; then
             echo "Successfully retrieved dynamic database credentials."
